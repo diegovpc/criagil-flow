@@ -7,22 +7,31 @@ import { Label } from "./ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Badge } from "./ui/badge";
 import { X, Plus } from "lucide-react";
-import { Demand } from "./KanbanColumn";
+import { Demand, Project, User } from "@/types";
 
 interface IntakeModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (demand: Omit<Demand, "id" | "createdAt">) => void;
+  projects: Project[];
+  users: User[];
 }
 
-export const IntakeModal = ({ isOpen, onClose, onSubmit }: IntakeModalProps) => {
+export const IntakeModal = ({ 
+  isOpen, 
+  onClose, 
+  onSubmit, 
+  projects, 
+  users 
+}: IntakeModalProps) => {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     type: "" as Demand["type"] | "",
     priority: "" as Demand["priority"] | "",
     stakeholder: "",
-    assignee: "",
+    assignees: [] as User[],
+    projectId: "",
     estimatedHours: "",
     dueDate: "",
     tags: [] as string[]
@@ -33,7 +42,7 @@ export const IntakeModal = ({ isOpen, onClose, onSubmit }: IntakeModalProps) => 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.title || !formData.description || !formData.type || !formData.priority || !formData.stakeholder) {
+    if (!formData.title || !formData.description || !formData.type || !formData.priority || !formData.stakeholder || !formData.projectId) {
       return;
     }
 
@@ -43,7 +52,9 @@ export const IntakeModal = ({ isOpen, onClose, onSubmit }: IntakeModalProps) => 
       type: formData.type as Demand["type"],
       priority: formData.priority as Demand["priority"],
       stakeholder: formData.stakeholder,
-      assignee: formData.assignee || undefined,
+      assignees: formData.assignees,
+      projectId: formData.projectId,
+      status: "backlog",
       estimatedHours: formData.estimatedHours ? Number(formData.estimatedHours) : undefined,
       dueDate: formData.dueDate ? new Date(formData.dueDate) : undefined,
       tags: formData.tags.length > 0 ? formData.tags : undefined
@@ -56,7 +67,8 @@ export const IntakeModal = ({ isOpen, onClose, onSubmit }: IntakeModalProps) => 
       type: "",
       priority: "",
       stakeholder: "",
-      assignee: "",
+      assignees: [],
+      projectId: "",
       estimatedHours: "",
       dueDate: "",
       tags: []
@@ -155,13 +167,19 @@ export const IntakeModal = ({ isOpen, onClose, onSubmit }: IntakeModalProps) => 
             </div>
 
             <div>
-              <Label htmlFor="assignee">Responsável</Label>
-              <Input
-                id="assignee"
-                value={formData.assignee}
-                onChange={(e) => setFormData(prev => ({ ...prev, assignee: e.target.value }))}
-                placeholder="Responsável pela execução"
-              />
+              <Label htmlFor="projectId">Projeto *</Label>
+              <Select value={formData.projectId} onValueChange={(value) => setFormData(prev => ({ ...prev, projectId: value }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o projeto" />
+                </SelectTrigger>
+                <SelectContent>
+                  {projects.map((project) => (
+                    <SelectItem key={project.id} value={project.id}>
+                      {project.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div>
